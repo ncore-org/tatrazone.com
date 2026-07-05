@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -53,9 +54,9 @@ export default function FAQPage() {
           </h1>
           <p className="text-gray-600 mb-10">
             Nenašli ste odpoveď?{" "}
-            <a href="/kontakt" className="text-primary-600 hover:underline">
+            <Link href="/kontakt" className="text-primary-600 hover:underline">
               Kontaktujte nás
-            </a>
+            </Link>
             .
           </p>
           <div className="space-y-3">

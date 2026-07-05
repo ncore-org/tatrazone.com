@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
     unoptimized: true,
   },
   trailingSlash: true,
-  basePath: "",
-  assetPrefix: "",
+  basePath: "/tatrazone.com",
+  assetPrefix: "/tatrazone.com/",
   outputFileTracingRoot: process.cwd(),
 };
 
