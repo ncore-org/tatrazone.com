@@ -1,26 +1,58 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import InstallPrompt from "@/components/pwa/InstallPrompt";
 
 export const metadata: Metadata = {
   title: {
-    default: "Tatrazone | Váš online obchod",
+    default: "Tatrazone — Sklep internetowy",
     template: "%s | Tatrazone",
   },
   description:
-    "Tatrazone - moderný online obchod s širokým výberom produktov za skvelé ceny. Rýchle doručenie, bezpečná platba.",
+    "Ponad 10 000 produktów. Bezpieczne zakupy, szybka dostawa, paczkomaty InPost.",
+  manifest: "/tatrazone.com/manifest.json",
+
+  alternates: {
+    canonical: "https://tatrazone.com",
+    languages: {
+      "pl-PL": "https://tatrazone.com",
+    },
+  },
+
+  openGraph: {
+    locale: "pl_PL",
+    siteName: "Tatrazone",
+    type: "website",
+  },
+
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Tatrazone",
+  },
+
+  other: {
+    "mobile-web-app-capable": "yes",
+    "msapplication-TileColor": "#2563EB",
+  },
+
   keywords: [
     "tatrazone",
-    "online obchod",
-    "eshop",
-    "nakupovanie",
-    "Slovensko",
+    "sklep internetowy",
+    "zakupy online",
+    "elektronika",
+    "Polska",
+    "darmowa dostawa",
+    "promocje",
   ],
-  openGraph: {
-    title: "Tatrazone - Váš online obchod",
-    description: "Moderný online obchod s širokým výberom produktov.",
-    type: "website",
-    locale: "sk_SK",
-  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2563EB",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -29,11 +61,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="sk">
+    <html lang="pl">
+      <head>
+        <link
+          rel="apple-touch-icon"
+          href="/tatrazone.com/icons/apple-touch-icon.svg"
+        />
+        <link rel="icon" href="/tatrazone.com/icons/icon-192.svg" />
+        <link rel="mask-icon" href="/tatrazone.com/icons/icon-512.svg" color="#2563EB" />
+        <meta name="application-name" content="Tatrazone" />
+      </head>
       <body className="flex min-h-screen flex-col">
-        <div id="page-wrapper" className="flex flex-1 flex-col">
-          {children}
-        </div>
+        <Header />
+        <main className="flex-1">{children}</main>
+        <Footer />
+        <InstallPrompt />
       </body>
     </html>
   );
