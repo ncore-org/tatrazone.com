@@ -6,8 +6,8 @@
   --color-primary-200: #bfdbfe;
   --color-primary-300: #93c5fd;
   --color-primary-400: #60a5fa;
-  --color-primary-500: #1a73e8;
-  --color-primary-600: #1557b0;
+  --color-primary-500: #2563eb;
+  --color-primary-600: #1d4ed8;
   --color-primary-700: #1e40af;
   --color-primary-800: #1e3a8a;
   --color-primary-900: #172554;
@@ -39,8 +39,6 @@
   --color-error: #dc2626;
   --color-info: #0ea5e9;
 
-  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
-
   --container-max: 1280px;
 }
 
@@ -53,7 +51,6 @@
 
   body {
     @apply bg-white text-gray-900;
-    font-family: var(--font-sans);
   }
 
   *,
@@ -64,6 +61,16 @@
 
   a {
     @apply text-primary-600 no-underline;
+  }
+
+  :root {
+    --header-height: 112px;
+  }
+
+  @media (max-width: 767px) {
+    :root {
+      --header-height: 52px;
+    }
   }
 }
 
@@ -93,23 +100,6 @@
     overflow: hidden;
   }
 
-  /* PWA install prompt animation */
-  @keyframes slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.4s ease-out;
-  }
-
-  /* Hide scrollbar but keep scrollable */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -118,8 +108,94 @@
     display: none;
   }
 
-  /* Skeleton loading */
   .skeleton {
     @apply bg-gray-200 animate-pulse rounded;
   }
+
+  /* PWA install prompt animation */
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .animate-slide-up { animation: slide-up 0.4s ease-out; }
+
+  @keyframes slide-in-left {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+  .animate-slide-in-left { animation: slide-in-left 0.3s ease-out; }
+
+  @keyframes slide-in-right {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .animate-fade-in { animation: fade-in 0.3s ease-out; }
+
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  .animate-scale-in { animation: scale-in 0.2s ease-out; }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+  /* Corner promo ribbon */
+  .corner-ribbon {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 80px;
+    height: 80px;
+    overflow: hidden;
+    z-index: 5;
+  }
+  .corner-ribbon span {
+    position: absolute;
+    top: 14px;
+    right: -30px;
+    transform: rotate(45deg);
+    width: 120px;
+    padding: 3px 0;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+  .corner-ribbon span::before,
+  .corner-ribbon span::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    border-style: solid;
+  }
+  .corner-ribbon span::before {
+    left: 0;
+    border-width: 0 0 4px 4px;
+    border-color: transparent transparent transparent rgba(0,0,0,0.2);
+  }
+  .corner-ribbon span::after {
+    right: 0;
+    border-width: 0 4px 4px 0;
+    border-color: transparent rgba(0,0,0,0.2) transparent transparent;
+  }
+
+  /* Price flash animation */
+  @keyframes price-flash {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); color: #dc2626; }
+    100% { transform: scale(1); }
+  }
+  .animate-price-flash { animation: price-flash 0.5s ease-out; }
 }
