@@ -1,0 +1,41 @@
+​1. Hlavná štruktúra (Core Pages)
+​Tieto stránky tvoria kostru e-shopu a riešia právne, informatívne a navigačné potreby.
+​/ (Home)
+​/o-nas (Príbeh, hodnoty, tím)
+​/kontakt (Adresa, mapa, formulár, kontaktné údaje)
+​/obchodne-podmienky
+​/ochrana-osobnych-udajov
+​/reklamacny-poriadok
+​/doprava-a-platba
+​/faq (Často kladené otázky)
+​/kariera (Volné pracovné miesta)
+​/blog (Obsahový marketing pre SEO)
+​2. Produktová architektúra (Catalog & Navigation)
+​Toto je srdce e-shopu, kde dochádza k vyhľadávaniu a výberu.
+​/kategoria/ (Hlavné kategórie)
+​/kategoria/podkategoria/ (Sub-kategórie)
+​/kategoria/podkategoria/produkt/ (Detail produktu)
+​/vyrobcovia/ (Prehľad značiek)
+​/vyrobcovia/nazov-znacky/ (Produkty konkrétnej značky)
+​/akcie/ (Výpredaj, špeciálne ponuky)
+​/novinky/
+​3. Nákupný proces (Checkout Flow)
+​Musí byť maximálne zjednodušený, bez zbytočných rozptýlení.
+​/kosik (Prehľad položiek, úprava množstva)
+​/pokladna (Checkout – ideálne One-Page alebo Step-by-Step)
+​/pokladna/dakujeme (Potvrdenie objednávky, tracking pixel)
+​4. Používateľská zóna (Customer Account)
+​/ucet/prihlasenie
+​/ucet/registracia
+​/ucet/zabudnute-heslo
+​/ucet/profil (Správa údajov)
+​/ucet/objednavky (História objednávok a stav)
+​/ucet/adresy
+​/ucet/oblubene (Wishlist)
+​5. Technické a SEO stránky (Hidden/System)
+​Tieto stránky nie sú primárne určené pre bežného návštevníka, ale sú kľúčové pre systém.
+​/vyhladavanie (Výsledky vyhľadávania)
+​/404 (Stránka nenájdená)
+​/sitemap.xml (Mapa stránok pre roboty)
+​/robots.txt
+​/rss (Pre články na blogu)

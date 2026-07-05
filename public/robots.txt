@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /ucet/
+Disallow: /admin/
+
+Sitemap: https://tatrazone.com/sitemap.xml
