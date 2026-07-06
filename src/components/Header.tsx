@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCart } from "@/app/providers/CartContext";
 import HamburgerMenu from "@/components/HamburgerMenu";
 
 const categories = [
@@ -35,8 +36,22 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeMega, setActiveMega] = useState<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [badgeBounce, setBadgeBounce] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const megaTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevCount = useRef(0);
+  const { count: cartCount } = useCart();
+
+  // Trigger badge bounce when cart count changes
+  useEffect(() => {
+    if (cartCount !== prevCount.current) {
+      prevCount.current = cartCount;
+      if (cartCount > 0) {
+        setBadgeBounce(true);
+        setTimeout(() => setBadgeBounce(false), 500);
+      }
+    }
+  }, [cartCount]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -237,8 +252,10 @@ export default function Header() {
                     <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
                   </svg>
                   <span className="hidden lg:inline group-hover:text-primary-600 transition-colors">Koszyk</span>
-                  <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] font-bold w-4.5 h-4.5 rounded-full flex items-center justify-center shadow-sm">
-                    0
+                  <span className={`absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center shadow-sm px-1 transition-all ${
+                    badgeBounce ? "animate-badge-bounce" : ""
+                  }`}>
+                    {cartCount}
                   </span>
                 </Link>
               </div>
@@ -379,8 +396,10 @@ export default function Header() {
                 </svg>
                 <span className="text-[10px] font-medium">{item.label}</span>
                 {item.badge && (
-                  <span className="absolute -top-0.5 right-1 bg-primary-600 text-white text-[8px] font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center">
-                    0
+                  <span className={`absolute -top-0.5 right-1 bg-primary-600 text-white text-[8px] font-bold min-w-[14px] h-[14px] rounded-full flex items-center justify-center px-0.5 ${
+                    badgeBounce ? "animate-badge-bounce" : ""
+                  }`}>
+                    {cartCount}
                   </span>
                 )}
               </Link>

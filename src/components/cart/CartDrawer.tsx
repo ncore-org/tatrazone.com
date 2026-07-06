@@ -2,31 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
-interface CartItem {
-  id: number;
-  title: string;
-  price: number;
-  quantity: number;
-  image: string;
-}
-
-const initialItems: CartItem[] = [
-  {
-    id: 1,
-    title: "Laptop Gaming XYZ Pro 15",
-    price: 4999.0,
-    quantity: 1,
-    image: "https://picsum.photos/seed/cart1/100/100",
-  },
-  {
-    id: 2,
-    title: "Słuchawki bezprzewodowe QuietSound",
-    price: 299.99,
-    quantity: 2,
-    image: "https://picsum.photos/seed/cart2/100/100",
-  },
-];
+import { useCart } from "@/app/providers/CartContext";
 
 const formatPrice = (val: number) =>
   val.toLocaleString("pl-PL", {
@@ -35,24 +11,13 @@ const formatPrice = (val: number) =>
   });
 
 export default function CartDrawer() {
-  const [items, setItems] = useState<CartItem[]>(initialItems);
+  const { items, count, subtotal, shipping, total, freeShippingRemaining, removeItem, updateQuantity } = useCart();
   const [removingIds, setRemovingIds] = useState<Set<number>>(new Set());
 
-  const updateQuantity = (id: number, delta: number) => {
-    setItems((prev) =>
-      prev
-        .map((item) =>
-          item.id === id
-            ? { ...item, quantity: Math.max(1, Math.min(99, item.quantity + delta)) }
-            : item
-        )
-    );
-  };
-
-  const removeItem = (id: number) => {
+  const handleRemove = (id: number) => {
     setRemovingIds((prev) => new Set(prev).add(id));
     setTimeout(() => {
-      setItems((prev) => prev.filter((item) => item.id !== id));
+      removeItem(id);
       setRemovingIds((prev) => {
         const next = new Set(prev);
         next.delete(id);
@@ -61,23 +26,14 @@ export default function CartDrawer() {
     }, 250);
   };
 
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-  const shipping = subtotal >= 200 ? 0 : 19.99;
-  const total = subtotal + shipping;
-  const freeShippingRemaining = 200 - subtotal;
-
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 md:p-6">
       <h2 className="text-lg font-bold text-gray-900 mb-4">
-        Koszyk ({items.length})
+        Koszyk ({count})
       </h2>
 
       {items.length === 0 ? (
         <div className="text-center py-8">
-          {/* SVG empty cart illustration */}
           <svg
             className="w-24 h-24 mx-auto text-gray-300 mb-4"
             fill="none"
@@ -122,7 +78,7 @@ export default function CartDrawer() {
               </div>
             </div>
           ) : (
-            <div className="bg-green-100 border border-green-200 rounded-lg p-3 mb-4 text-center">
+            <div className="bg-green-100 border border-green-200 rounded-lg p-3 mb-4 text-center animate-toast-in">
               <p className="text-green-700 font-medium text-sm">
                 🎉 Masz darmową dostawę!
               </p>
@@ -130,7 +86,7 @@ export default function CartDrawer() {
           )}
 
           {/* Items */}
-          <div className="space-y-3 mb-4">
+          <div className="space-y-3 mb-4 max-h-[400px] overflow-y-auto scrollbar-hide">
             {items.map((item) => (
               <div
                 key={item.id}
@@ -179,7 +135,7 @@ export default function CartDrawer() {
                   </div>
                 </div>
                 <button
-                  onClick={() => removeItem(item.id)}
+                  onClick={() => handleRemove(item.id)}
                   className="text-gray-400 hover:text-red-500 transition-colors p-1"
                   aria-label="Usuń produkt"
                 >

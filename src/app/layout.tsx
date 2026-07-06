@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import CookieConsent from "@/components/CookieConsent";
+import { Providers } from "@/app/providers";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -85,11 +86,13 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
       <body className="flex min-h-screen flex-col">
-        <Header />
-        <main className="flex-1 pb-16 md:pb-0">{children}</main>
-        <Footer />
-        <InstallPrompt />
-        <CookieConsent />
+        <Providers>
+          <Header />
+          <main className="flex-1 pb-16 md:pb-0">{children}</main>
+          <Footer />
+          <InstallPrompt />
+          <CookieConsent />
+        </Providers>
       </body>
     </html>
   );

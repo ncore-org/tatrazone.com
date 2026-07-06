@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useCart } from "@/app/providers/CartContext";
+import { useToast } from "@/app/providers/ToastContext";
 
 export interface ProductCardProps {
+  id?: number;
   title: string;
   price: number;
   originalPrice?: number;
@@ -34,6 +37,7 @@ export function ProductCardSkeleton() {
 }
 
 export default function ProductCard({
+  id: propId,
   title,
   price,
   originalPrice,
@@ -46,7 +50,11 @@ export default function ProductCard({
 }: ProductCardProps) {
   const [wishlist, setWishlist] = useState(initialWishlist);
   const [wishlistAnim, setWishlistAnim] = useState(false);
+  const [quickAddAnim, setQuickAddAnim] = useState(false);
+  const { addItem, isInCart } = useCart();
+  const { showToast } = useToast();
 
+  const itemId = propId ?? title.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
   const discountPercent = originalPrice
     ? Math.round((1 - price / originalPrice) * 100)
     : 0;
@@ -54,16 +62,32 @@ export default function ProductCard({
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setWishlist(!wishlist);
+    const newState = !wishlist;
+    setWishlist(newState);
     setWishlistAnim(true);
     setTimeout(() => setWishlistAnim(false), 400);
+    showToast(
+      newState ? "Dodano do ulubionych ♥" : "Usunięto z ulubionych",
+      "wishlist"
+    );
   };
 
   const handleQuickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // Placeholder — dispatch to cart context
-    console.log("Dodano do koszyka:", title);
+    if (isInCart(itemId)) {
+      showToast("Ten produkt jest już w koszyku", "info");
+      return;
+    }
+    setQuickAddAnim(true);
+    setTimeout(() => setQuickAddAnim(false), 500);
+    addItem({
+      id: itemId,
+      title,
+      price,
+      image,
+    });
+    showToast(`${title} — dodano do koszyka!`, "success");
   };
 
   const formatPrice = (val: number) =>
@@ -84,10 +108,7 @@ export default function ProductCard({
           alt={title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
-          fetchPriority={undefined}
         />
-        {/* Dark overlay on hover for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/0 to-transparent pointer-events-none" />
 
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
@@ -135,12 +156,25 @@ export default function ProductCard({
           </svg>
         </button>
 
-        {/* Quick-add button on hover (desktop) */}
+        {/* Quick-add button */}
         <button
           onClick={handleQuickAdd}
-          className="absolute bottom-2 left-2 right-2 bg-primary-600 text-white text-xs font-semibold py-2 rounded-lg opacity-0 md:group-hover:opacity-100 translate-y-2 md:group-hover:translate-y-0 transition-all duration-200"
+          className={`absolute bottom-2 left-2 right-2 text-xs font-semibold py-2 rounded-lg transition-all duration-200 ${
+            quickAddAnim
+              ? "bg-green-600 text-white opacity-100 translate-y-0"
+              : "bg-primary-600 text-white opacity-0 md:group-hover:opacity-100 translate-y-2 md:group-hover:translate-y-0"
+          }`}
         >
-          Dodaj do koszyka
+          {quickAddAnim ? (
+            <span className="flex items-center justify-center gap-1">
+              <svg className="w-3.5 h-3.5 animate-scale-check" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round">
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+              Dodano!
+            </span>
+          ) : (
+            "Dodaj do koszyka"
+          )}
         </button>
       </div>
 
