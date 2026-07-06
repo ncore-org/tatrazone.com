@@ -219,6 +219,17 @@ export default function Header() {
                 </Link>
 
                 <Link
+                  href="/kategoria"
+                  className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium text-gray-700 group"
+                >
+                  <svg className="w-5 h-5 group-hover:text-primary-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                    <path d="M9 19l-7-7 7-7" />
+                    <path d="M15 5l7 7-7 7" />
+                  </svg>
+                  <span className="hidden lg:inline group-hover:text-primary-600 transition-colors">Porównaj</span>
+                </Link>
+
+                <Link
                   href="/koszyk"
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium text-gray-700 group relative"
                 >
@@ -377,8 +388,6 @@ export default function Header() {
           </div>
         </div>
 
-        {/* Mobile padding */}
-        <div className="md:hidden h-16" />
       </header>
 
       {/* Hamburger Menu */}

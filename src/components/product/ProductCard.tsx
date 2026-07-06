@@ -41,7 +41,7 @@ export default function ProductCard({
   reviews,
   image,
   badge,
-  href = "/kategoria/produkt",
+  href = "#",
   onWishlist: initialWishlist = false,
 }: ProductCardProps) {
   const [wishlist, setWishlist] = useState(initialWishlist);

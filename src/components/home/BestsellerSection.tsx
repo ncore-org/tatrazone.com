@@ -1,25 +1,13 @@
 import Link from "next/link";
 import ProductCard from "@/components/product/ProductCard";
+import { products } from "@/data/products";
 
-const bestsellers = Array.from({ length: 8 }, (_, i) => ({
-  id: i + 1,
-  title: [
-    "Laptop Gaming XYZ Pro 15",
-    "Smartfon ABC Ultra 5G",
-    "Słuchawki bezprzewodowe QuietSound",
-    "Smartwatch FitPro X200",
-    "Tablet TabMax 12.4",
-    "Aparat cyfrowy FotoShot Z10",
-    "Głośnik przenośny BoomBox 360",
-    "Konsola GameStation 5 Pro",
-  ][i],
-  price: 4999 + i * 340,
-  originalPrice: i % 2 === 0 ? 6999 + i * 400 : undefined,
-  rating: 4.5 + (i % 4) * 0.1,
-  reviews: 120 + i * 45,
-  image: `https://picsum.photos/seed/best${i}/400/400`,
-  badge: i === 0 ? "Bestseller" : i === 2 ? "Nowość" : i === 4 ? "-20%" : undefined,
-}));
+const bestsellers = products
+  .filter((p) => p.badge === "Bestseller" || p.id <= 8)
+  .slice(0, 8);
+
+const getSlugHref = (product: (typeof products)[number]) =>
+  `/kategoria/${product.slug}/${product.id}`;
 
 export default function BestsellerSection() {
   return (
@@ -35,15 +23,26 @@ export default function BestsellerSection() {
             </p>
           </div>
           <Link
-            href="/kategoria"
-            className="text-blue-600 font-medium text-sm md:text-base hover:text-blue-700 transition-colors flex items-center gap-1"
+            href="/akcje"
+            className="text-blue-600 font-medium text-sm md:text-base hover:text-blue-700 transition-colors flex items-center gap-1 group"
           >
-            Zobacz więcej →
+            Zobacz więcej
+            <span className="group-hover:translate-x-1 transition-transform">→</span>
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
           {bestsellers.map((product) => (
-            <ProductCard key={product.id} {...product} />
+            <ProductCard
+              key={product.id}
+              title={product.title}
+              price={product.price}
+              originalPrice={product.originalPrice}
+              rating={product.rating}
+              reviews={product.reviews}
+              image={product.image}
+              badge={product.badge}
+              href={getSlugHref(product)}
+            />
           ))}
         </div>
       </div>
