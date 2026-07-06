@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 const categories = [
@@ -93,35 +93,63 @@ interface HamburgerMenuProps {
 export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
   const [expandedCat, setExpandedCat] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Body scroll lock + focus trap + ESC handler
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      previousFocusRef.current = document.activeElement as HTMLElement;
+
+      // Focus drawer on open
+      setTimeout(() => drawerRef.current?.focus(), 100);
     } else {
       document.body.style.overflow = "";
+      // Restore focus
+      previousFocusRef.current?.focus();
     }
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
+
+  // Close on ESC
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!mounted) return null;
 
   return (
     <>
       {/* Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50 animate-fade-in"
-          onClick={onClose}
-        />
-      )}
+      <div
+        className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={onClose}
+        aria-hidden="true"
+      />
 
       {/* Drawer */}
       <div
-        className={`fixed top-0 left-0 bottom-0 w-[300px] max-w-[85vw] bg-white z-50 transform transition-transform duration-300 ease-out shadow-2xl ${
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu nawigacyjne"
+        tabIndex={-1}
+        className={`fixed top-0 left-0 bottom-0 w-[300px] max-w-[85vw] bg-white z-50 shadow-2xl transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] outline-none ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -139,20 +167,23 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               aria-label="Zamknij menu"
             >
-              <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg className="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                <path d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
           {/* Quick links */}
           <div className="grid grid-cols-2 gap-2 p-4 border-b border-gray-100 bg-gray-50">
-            {quickLinks.map((link) => (
+            {quickLinks.map((link, i) => (
               <Link
                 key={link.name}
                 href={link.href}
                 onClick={onClose}
-                className="flex items-center gap-2 px-3 py-2.5 bg-white rounded-lg text-sm font-medium text-gray-700 hover:text-primary-600 hover:shadow-sm transition-all"
+                className={`flex items-center gap-2 px-3 py-2.5 bg-white rounded-lg text-sm font-medium text-gray-700 hover:text-primary-600 hover:shadow-sm transition-all animate-slide-up-full ${
+                  isOpen ? `opacity-100` : `opacity-0`
+                }`}
+                style={{ animationDelay: isOpen ? `${100 + i * 50}ms` : "0ms" }}
               >
                 <span>{link.icon}</span>
                 <span>{link.name}</span>
@@ -166,29 +197,46 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
               <p className="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Kategorie
               </p>
-              {categories.map((cat) => (
-                <div key={cat.slug}>
+              {categories.map((cat, i) => (
+                <div
+                  key={cat.slug}
+                  className={`transition-all duration-300 ${
+                    isOpen ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
+                  }`}
+                  style={{
+                    transitionDelay: isOpen ? `${150 + i * 30}ms` : "0ms",
+                    transitionProperty: "opacity, transform",
+                  }}
+                >
                   <button
                     onClick={() => setExpandedCat(expandedCat === cat.slug ? null : cat.slug)}
                     className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-sm"
+                    aria-expanded={expandedCat === cat.slug}
                   >
                     <span className="flex items-center gap-2.5">
                       <span className="text-lg">{cat.icon}</span>
                       <span className="font-medium text-gray-800">{cat.name}</span>
                     </span>
                     <svg
-                      className={`w-4 h-4 text-gray-400 transition-transform ${
+                      className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
                         expandedCat === cat.slug ? "rotate-180" : ""
                       }`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
+                      strokeWidth={2}
+                      strokeLinecap="round"
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <path d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
-                  {expandedCat === cat.slug && (
-                    <div className="ml-9 mb-1 space-y-0.5 animate-fade-in">
+                  {/* Subcategories with max-height transition */}
+                  <div
+                    className={`overflow-hidden transition-all duration-200 ease-in-out ${
+                      expandedCat === cat.slug ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
+                    }`}
+                  >
+                    <div className="ml-9 mb-1 space-y-0.5 pt-0.5">
                       {cat.subcategories.map((sub) => (
                         <Link
                           key={sub}
@@ -207,7 +255,7 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
                         Zobacz wszystkie →
                       </Link>
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -220,8 +268,8 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
               onClick={onClose}
               className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-gray-700 hover:text-primary-600 rounded-lg hover:bg-white transition-all"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               Moje konto
             </Link>
@@ -230,8 +278,8 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
               onClick={onClose}
               className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-gray-700 hover:text-primary-600 rounded-lg hover:bg-white transition-all"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
               Ulubione
             </Link>
@@ -240,8 +288,8 @@ export default function HamburgerMenu({ isOpen, onClose }: HamburgerMenuProps) {
               onClick={onClose}
               className="flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-all"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                <path d="M4 6h16M4 12h16M4 18h16" />
               </svg>
               Wszystkie kategorie
             </Link>

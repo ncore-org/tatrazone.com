@@ -88,16 +88,16 @@ export default function manifest(): MetadataRoute.Manifest {
 
     screenshots: [
       {
-        src: `${basePath}/screenshots/home-pl.png`,
-        sizes: "390x844",
-        type: "image/png",
+        src: `${basePath}/icons/icon-512.svg`,
+        sizes: "512x512",
+        type: "image/svg+xml",
         form_factor: "narrow",
       },
       {
-        src: `${basePath}/screenshots/product-pl.png`,
-        sizes: "390x844",
-        type: "image/png",
-        form_factor: "narrow",
+        src: `${basePath}/icons/icon-512.svg`,
+        sizes: "512x512",
+        type: "image/svg+xml",
+        form_factor: "wide",
       },
     ],
   };

@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 
-interface ProductCardProps {
+export interface ProductCardProps {
   title: string;
   price: number;
   originalPrice?: number;
@@ -11,6 +12,25 @@ interface ProductCardProps {
   image: string;
   badge?: string;
   href?: string;
+  onWishlist?: boolean;
+}
+
+export function ProductCardSkeleton() {
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className="aspect-square skeleton-pulse" />
+      <div className="p-3 md:p-4 space-y-2">
+        <div className="flex gap-1">
+          {Array.from({ length: 5 }, (_, i) => (
+            <div key={i} className="w-3 h-3 rounded skeleton-pulse" />
+          ))}
+        </div>
+        <div className="h-4 skeleton-pulse w-3/4" />
+        <div className="h-4 skeleton-pulse w-1/2" />
+        <div className="h-3 skeleton-pulse w-1/3" />
+      </div>
+    </div>
+  );
 }
 
 export default function ProductCard({
@@ -22,23 +42,53 @@ export default function ProductCard({
   image,
   badge,
   href = "/kategoria/produkt",
+  onWishlist: initialWishlist = false,
 }: ProductCardProps) {
+  const [wishlist, setWishlist] = useState(initialWishlist);
+  const [wishlistAnim, setWishlistAnim] = useState(false);
+
   const discountPercent = originalPrice
     ? Math.round((1 - price / originalPrice) * 100)
     : 0;
 
+  const handleWishlist = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setWishlist(!wishlist);
+    setWishlistAnim(true);
+    setTimeout(() => setWishlistAnim(false), 400);
+  };
+
+  const handleQuickAdd = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Placeholder — dispatch to cart context
+    console.log("Dodano do koszyka:", title);
+  };
+
+  const formatPrice = (val: number) =>
+    val.toLocaleString("pl-PL", {
+      style: "currency",
+      currency: "PLN",
+    });
+
   return (
     <Link
       href={href}
-      className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
+      className="group bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200 ease-out relative flex flex-col"
     >
+      {/* Image */}
       <div className="aspect-square bg-gray-50 relative overflow-hidden">
         <img
           src={image}
           alt={title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
+          fetchPriority={undefined}
         />
+        {/* Dark overlay on hover for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/0 to-transparent pointer-events-none" />
+
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {badge && (
@@ -57,44 +107,52 @@ export default function ProductCard({
             </span>
           )}
           {originalPrice && (
-            <span className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded">
+            <span className="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded animate-badge-pulse">
               -{discountPercent}%
             </span>
           )}
         </div>
+
         {/* Wishlist button */}
         <button
-          className="absolute top-2 right-2 w-8 h-8 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-colors opacity-0 group-hover:opacity-100 md:opacity-100"
-          onClick={(e) => {
-            e.preventDefault();
-          }}
-          aria-label="Dodaj do ulubionych"
+          className={`absolute top-2 right-2 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center hover:bg-white transition-all shadow-sm ${
+            wishlist ? "opacity-100" : "opacity-0 md:group-hover:opacity-100"
+          }`}
+          onClick={handleWishlist}
+          aria-label={wishlist ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
         >
           <svg
-            className="w-4 h-4 text-gray-400 hover:text-red-500 transition-colors"
-            fill="none"
+            className={`w-4 h-4 transition-all ${
+              wishlist ? "text-red-500 scale-110" : "text-gray-400"
+            } ${wishlistAnim ? "animate-scale-check" : ""}`}
+            fill={wishlist ? "currentColor" : "none"}
             viewBox="0 0 24 24"
             stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-            />
+            <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
         </button>
+
+        {/* Quick-add button on hover (desktop) */}
+        <button
+          onClick={handleQuickAdd}
+          className="absolute bottom-2 left-2 right-2 bg-primary-600 text-white text-xs font-semibold py-2 rounded-lg opacity-0 md:group-hover:opacity-100 translate-y-2 md:group-hover:translate-y-0 transition-all duration-200"
+        >
+          Dodaj do koszyka
+        </button>
       </div>
-      <div className="p-3 md:p-4">
+
+      {/* Content */}
+      <div className="p-3 md:p-4 flex-1 flex flex-col">
         {/* Stars */}
         <div className="flex items-center gap-1 mb-1.5">
           {Array.from({ length: 5 }, (_, i) => (
             <svg
               key={i}
               className={`w-3 h-3 ${
-                i < Math.floor(rating)
-                  ? "text-yellow-400"
-                  : "text-gray-200"
+                i < Math.floor(rating) ? "text-yellow-400" : "text-gray-200"
               }`}
               fill="currentColor"
               viewBox="0 0 20 20"
@@ -105,30 +163,25 @@ export default function ProductCard({
           <span className="text-[11px] text-gray-400 ml-1">({reviews})</span>
         </div>
 
-        <h3 className="text-sm md:text-base font-medium text-gray-800 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors min-h-[2.5rem]">
+        <h3 className="text-sm md:text-base font-medium text-gray-800 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors min-h-[2.5rem] flex-1">
           {title}
         </h3>
 
         {/* Price in PLN */}
-        <div className="flex items-baseline gap-2">
+        <div className="flex items-baseline gap-2 mb-1">
           <span className="text-lg font-bold text-gray-900">
-            {price.toLocaleString("pl-PL", {
-              style: "currency",
-              currency: "PLN",
-            })}
+            {formatPrice(price)}
           </span>
           {originalPrice && (
             <span className="text-sm text-gray-400 line-through">
-              {originalPrice.toLocaleString("pl-PL", {
-                style: "currency",
-                currency: "PLN",
-              })}
+              {formatPrice(originalPrice)}
             </span>
           )}
         </div>
 
         {/* Delivery info */}
-        <p className="text-[11px] text-green-600 font-medium mt-1.5">
+        <p className="text-[11px] text-green-600 font-medium mt-auto flex items-center gap-1">
+          <span className="w-1.5 h-1.5 bg-green-500 rounded-full inline-block" />
           Dostawa w 24h
         </p>
       </div>

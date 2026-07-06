@@ -47,6 +47,7 @@
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scrollbar-gutter: stable;
   }
 
   body {
@@ -65,6 +66,11 @@
 
   :root {
     --header-height: 112px;
+    --sat: env(safe-area-inset-top, 0px);
+    --sar: env(safe-area-inset-right, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
+    --sal: env(safe-area-inset-left, 0px);
+    --scrollbar-width: 0px;
   }
 
   @media (max-width: 767px) {
@@ -76,7 +82,22 @@
 
 @layer utilities {
   .container-site {
-    @apply mx-auto w-full max-w-[1280px] px-4 sm:px-6 lg:px-8;
+    @apply mx-auto w-full;
+    max-width: var(--container-max);
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  @media (min-width: 640px) {
+    .container-site {
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .container-site {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
   }
 
   .line-clamp-1 {
@@ -108,46 +129,31 @@
     display: none;
   }
 
+  .scroll-lock {
+    overflow: hidden;
+    padding-right: var(--scrollbar-width);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .pb-safe { padding-bottom: var(--sab); }
+  .pt-safe { padding-top: var(--sat); }
+  .pl-safe { padding-left: var(--sal); }
+  .pr-safe { padding-right: var(--sar); }
+  .px-safe { padding-left: var(--sal); padding-right: var(--sar); }
+  .py-safe { padding-top: var(--sat); padding-bottom: var(--sab); }
+
   .skeleton {
-    @apply bg-gray-200 animate-pulse rounded;
+    @apply bg-gray-200 rounded;
   }
-
-  /* PWA install prompt animation */
-  @keyframes slide-up {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+  .skeleton-pulse {
+    @apply bg-gray-200 rounded;
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: shimmer-slow 2s ease-in-out infinite;
   }
-  .animate-slide-up { animation: slide-up 0.4s ease-out; }
-
-  @keyframes slide-in-left {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
-  }
-  .animate-slide-in-left { animation: slide-in-left 0.3s ease-out; }
-
-  @keyframes slide-in-right {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
-  }
-  .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
-
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  .animate-fade-in { animation: fade-in 0.3s ease-out; }
-
-  @keyframes scale-in {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
-  .animate-scale-in { animation: scale-in 0.2s ease-out; }
-
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-  }
-  .animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
 
   /* Corner promo ribbon */
   .corner-ribbon {
@@ -190,12 +196,186 @@
     border-width: 0 4px 4px 0;
     border-color: transparent rgba(0,0,0,0.2) transparent transparent;
   }
+}
 
-  /* Price flash animation */
-  @keyframes price-flash {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.1); color: #dc2626; }
-    100% { transform: scale(1); }
+/* ===== Animations ===== */
+
+/* Slide up (entrance) */
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slide-up 0.4s ease-out; }
+
+/* Slide up full height (for loading cards) */
+@keyframes slide-up-full {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up-full { animation: slide-up-full 0.5s ease-out; }
+
+/* Slide down (mega menu, dropdowns) */
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-down { animation: slide-down 0.25s ease-out; }
+
+/* Slide in left (hamburger) */
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-left { animation: slide-in-left 0.3s ease-out; }
+
+/* Slide out left (hamburger close) */
+@keyframes slide-out-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+.animate-slide-out-left { animation: slide-out-left 0.25s ease-in; }
+
+/* Slide in right (cart drawer) */
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+
+/* Slide out right (cart drawer close) */
+@keyframes slide-out-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+.animate-slide-out-right { animation: slide-out-right 0.25s ease-in; }
+
+/* Drawer in with spring easing */
+@keyframes drawer-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.animate-drawer-in { animation: drawer-in 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* Drawer out */
+@keyframes drawer-out {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+.animate-drawer-out { animation: drawer-out 0.25s ease-in; }
+
+/* Fade in */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in { animation: fade-in 0.3s ease-out; }
+
+/* Fade out */
+@keyframes fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.animate-fade-out { animation: fade-out 0.2s ease-in; }
+
+/* Scale in */
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in { animation: scale-in 0.2s ease-out; }
+
+/* Scale check (wishlist heart, checkmarks) */
+@keyframes scale-check {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.animate-scale-check { animation: scale-check 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+/* Pulse dot */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
+
+/* Badge pulse (discount pills) */
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+.animate-badge-pulse { animation: badge-pulse 2s ease-in-out infinite; }
+
+/* Price flash */
+@keyframes price-flash {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); color: #dc2626; }
+  100% { transform: scale(1); }
+}
+.animate-price-flash { animation: price-flash 0.5s ease-out; }
+
+/* Shimmer slow (skeleton loading) */
+@keyframes shimmer-slow {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Toast in (notifications) */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-toast-in { animation: toast-in 0.35s ease-out; }
+
+/* Toast out */
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(20px) scale(0.95); }
+}
+.animate-toast-out { animation: toast-out 0.25s ease-in; }
+
+/* Cross-fade (hero slides) */
+@keyframes cross-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-cross-fade-in { animation: cross-fade-in 0.5s ease-out; }
+
+@keyframes cross-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.animate-cross-fade-out { animation: cross-fade-out 0.3s ease-in; }
+
+/* Slide content stagger in */
+@keyframes slide-content-in {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-content-in { animation: slide-content-in 0.6s ease-out; }
+
+/* Stagger helpers */
+.animate-stagger-1  { animation-delay: 0ms; }
+.animate-stagger-2  { animation-delay: 40ms; }
+.animate-stagger-3  { animation-delay: 80ms; }
+.animate-stagger-4  { animation-delay: 120ms; }
+.animate-stagger-5  { animation-delay: 160ms; }
+.animate-stagger-6  { animation-delay: 200ms; }
+.animate-stagger-7  { animation-delay: 240ms; }
+.animate-stagger-8  { animation-delay: 280ms; }
+.animate-stagger-9  { animation-delay: 320ms; }
+.animate-stagger-10 { animation-delay: 360ms; }
+.animate-stagger-11 { animation-delay: 400ms; }
+.animate-stagger-12 { animation-delay: 440ms; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  .animate-price-flash { animation: price-flash 0.5s ease-out; }
 }

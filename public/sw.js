@@ -1,17 +1,21 @@
-// Tatrazone PWA Service Worker v1.0
-// Manually managed for GitHub Pages static deployment
+// Tatrazone PWA Service Worker v2.0
+// Deployed via GitHub Pages at /tatrazone.com/
 
-const CACHE_VERSION = 'tz-v1';
+const CACHE_VERSION = 'tz-v2';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const IMAGE_CACHE = `${CACHE_VERSION}-images`;
 const PAGE_CACHE = `${CACHE_VERSION}-pages`;
+const FONT_CACHE = `${CACHE_VERSION}-fonts`;
 
 const PRECACHE_URLS = [
   '/tatrazone.com/',
   '/tatrazone.com/manifest.json',
   '/tatrazone.com/icons/icon-192.svg',
   '/tatrazone.com/icons/icon-512.svg',
+  '/tatrazone.com/offline.html',
 ];
+
+const BASE = '/tatrazone.com';
 
 // Install - precache core assets
 self.addEventListener('install', (event) => {
@@ -23,13 +27,13 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate - clean old caches
+// Activate - clean old cache versions
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys
-          .filter((key) => key.startsWith('tz-') && key !== STATIC_CACHE && key !== IMAGE_CACHE && key !== PAGE_CACHE)
+          .filter((key) => key.startsWith('tz-') && !key.startsWith(CACHE_VERSION))
           .map((key) => caches.delete(key))
       );
     })
@@ -37,7 +41,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch - strategy per resource type
+// Fetch strategy
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -46,31 +50,35 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   // API calls - network only
-  if (url.pathname.includes('/api/')) {
+  if (url.pathname.includes('/api/')) return;
+
+  // Fonts - cache first (extremely long)
+  if (url.pathname.includes('/_next/static/media/') || url.origin === 'https://fonts.googleapis.com' || url.origin === 'https://fonts.gstatic.com') {
+    event.respondWith(cacheFirst(request, FONT_CACHE));
     return;
   }
 
   // Images - cache first
-  if (request.destination === 'image' || url.pathname.startsWith('/tatrazone.com/images/')) {
+  if (request.destination === 'image' || url.pathname.startsWith(`${BASE}/images/`)) {
     event.respondWith(cacheFirst(request, IMAGE_CACHE));
     return;
   }
 
   // SVG icons - cache first
-  if (url.pathname.startsWith('/tatrazone.com/icons/')) {
+  if (url.pathname.startsWith(`${BASE}/icons/`)) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
     return;
   }
 
   // Next.js static assets - cache first
-  if (url.pathname.startsWith('/tatrazone.com/_next/static/')) {
+  if (url.pathname.startsWith(`${BASE}/_next/static/`)) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
     return;
   }
 
-  // HTML pages - network first, fallback to cache, then offline page
+  // HTML pages - network first with timeout + offline fallback
   if (request.mode === 'navigate' || request.headers.get('Accept')?.includes('text/html')) {
-    event.respondWith(networkFirstWithOffline(request));
+    event.respondWith(networkFirstWithTimeout(request, 5000));
     return;
   }
 
@@ -80,8 +88,12 @@ self.addEventListener('fetch', (event) => {
 
 // Cache-first strategy
 async function cacheFirst(request, cacheName) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
+  try {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+  } catch (e) {
+    // Cache read error, fall through to network
+  }
 
   try {
     const response = await fetch(request);
@@ -91,26 +103,43 @@ async function cacheFirst(request, cacheName) {
     }
     return response;
   } catch (error) {
+    // If it's a font request and fetch fails, return a fallback
+    if (request.destination === 'font') {
+      return new Response('', { status: 200, headers: { 'Content-Type': 'font/woff2' } });
+    }
     return new Response('Offline', { status: 503 });
   }
 }
 
-// Network-first with offline fallback
-async function networkFirstWithOffline(request) {
+// Network-first with timeout + offline fallback
+async function networkFirstWithTimeout(request, timeoutMs) {
+  const timeoutPromise = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('Timeout')), timeoutMs)
+  );
+
   try {
-    const response = await fetch(request);
+    const response = await Promise.race([fetch(request), timeoutPromise]);
     if (response.ok) {
       const cache = await caches.open(PAGE_CACHE);
       cache.put(request, response.clone());
     }
     return response;
   } catch (error) {
-    const cached = await caches.match(request);
-    if (cached) return cached;
+    // Try cache
+    try {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+    } catch (e) {
+      // Cache error
+    }
 
     // Try serving the offline page
-    const offlinePage = await caches.match('/tatrazone.com/404.html');
-    if (offlinePage) return offlinePage;
+    try {
+      const offlinePage = await caches.match(`${BASE}/offline.html`);
+      if (offlinePage) return offlinePage;
+    } catch (e) {
+      // Offline page miss
+    }
 
     return new Response('Offline', {
       status: 503,
@@ -121,17 +150,70 @@ async function networkFirstWithOffline(request) {
 
 // Stale-while-revalidate
 async function staleWhileRevalidate(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  const cached = await cache.match(request);
+  try {
+    const cache = await caches.open(cacheName);
+    const cached = await cache.match(request);
 
-  const fetchPromise = fetch(request)
-    .then((response) => {
-      if (response.ok) {
-        cache.put(request, response.clone());
-      }
-      return response;
-    })
-    .catch(() => cached);
+    const fetchPromise = fetch(request)
+      .then((response) => {
+        if (response.ok) {
+          cache.put(request, response.clone());
+        }
+        return response;
+      })
+      .catch(() => cached);
 
-  return cached || fetchPromise;
+    return cached || fetchPromise;
+  } catch (error) {
+    return fetch(request).catch(() => new Response('', { status: 503 }));
+  }
 }
+
+// Push notification event
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  const data = event.data.json();
+  const options = {
+    title: data.title || 'Tatrazone',
+    body: data.body || 'Nowe promocje czekają!',
+    icon: `${BASE}/icons/icon-192.svg`,
+    badge: `${BASE}/icons/icon-192.svg`,
+    data: { url: data.url || `${BASE}/` },
+    vibrate: [200, 100, 200],
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(options.title, options)
+  );
+});
+
+// Notification click handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const urlToOpen = event.notification.data?.url || `${BASE}/`;
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Focus existing tab if available
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          client.focus();
+          client.navigate(urlToOpen);
+          return;
+        }
+      }
+      // Open new tab
+      if (clients.openWindow) {
+        clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+
+// Message handler for skipWaiting
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
