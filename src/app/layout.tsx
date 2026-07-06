@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import CookieConsent from "@/components/CookieConsent";
+import CartDrawer from "@/components/cart/CartDrawer";
 import { Providers } from "@/app/providers";
 
 const inter = Inter({
@@ -92,6 +93,7 @@ export default function RootLayout({
           <Footer />
           <InstallPrompt />
           <CookieConsent />
+          <CartDrawer />
         </Providers>
       </body>
     </html>

@@ -97,6 +97,63 @@ export default function Header() {
     megaTimer.current = setTimeout(() => setActiveMega(null), 200);
   };
 
+  // Search placeholder typing animation
+  const searchPhrases = [
+    "Szukaj produktów, kategorii, marek...",
+    "laptop gamingowy",
+    "smartfon 5G",
+    "słuchawki bezprzewodowe",
+    "pralka automatyczna",
+    "ekspres do kawy",
+    "buty sportowe",
+    "zabawki dla dzieci",
+    "karma dla psa",
+    "telewizor 55 cali",
+    "robot sprzątający",
+    "krem przeciwzmarszczkowy",
+    "opony zimowe",
+    "książki bestsellery",
+  ];
+  const [displayedPlaceholder, setDisplayedPlaceholder] = useState(searchPhrases[0]);
+  const placeholderIdx = useRef(0);
+  const placeholderChar = useRef(0);
+  const placeholderDeleting = useRef(false);
+
+  useEffect(() => {
+    const el = searchPhrases[placeholderIdx.current];
+    if (!placeholderDeleting.current) {
+      // Typing
+      if (placeholderChar.current < el.length) {
+        const timer = setTimeout(() => {
+          placeholderChar.current++;
+          setDisplayedPlaceholder(el.slice(0, placeholderChar.current));
+        }, 60);
+        return () => clearTimeout(timer);
+      } else {
+        // Pause when fully typed
+        const timer = setTimeout(() => {
+          placeholderDeleting.current = true;
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      // Deleting
+      if (placeholderChar.current > 0) {
+        const timer = setTimeout(() => {
+          placeholderChar.current--;
+          setDisplayedPlaceholder(el.slice(0, placeholderChar.current));
+        }, 30);
+        return () => clearTimeout(timer);
+      } else {
+        placeholderDeleting.current = false;
+        placeholderIdx.current = (placeholderIdx.current + 1) % searchPhrases.length;
+        // Small pause before next phrase
+        const timer = setTimeout(() => {}, 500);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [displayedPlaceholder, searchPhrases]);
+
   const suggestions = searchQuery.length > 1
     ? categories
         .filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -156,7 +213,7 @@ export default function Header() {
                 <div className="relative w-full">
                   <input
                     type="text"
-                    placeholder="Szukaj produktów, kategorii, marek..."
+                    placeholder={displayedPlaceholder}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => {/* keep open */}}
@@ -214,6 +271,17 @@ export default function Header() {
                 </button>
 
                 <Link
+                  href="/porownaj"
+                  className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium text-gray-700 group"
+                >
+                  <svg className="w-5 h-5 group-hover:text-primary-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+                    <path d="M9 19l-7-7 7-7" />
+                    <path d="M15 5l7 7-7 7" />
+                  </svg>
+                  <span className="hidden lg:inline group-hover:text-primary-600 transition-colors">Porównaj</span>
+                </Link>
+
+                <Link
                   href="/konto/logowanie"
                   className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium text-gray-700 group"
                 >
@@ -231,17 +299,6 @@ export default function Header() {
                     <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
                   <span className="hidden lg:inline group-hover:text-red-500 transition-colors">Ulubione</span>
-                </Link>
-
-                <Link
-                  href="/kategoria"
-                  className="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium text-gray-700 group"
-                >
-                  <svg className="w-5 h-5 group-hover:text-primary-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-                    <path d="M9 19l-7-7 7-7" />
-                    <path d="M15 5l7 7-7 7" />
-                  </svg>
-                  <span className="hidden lg:inline group-hover:text-primary-600 transition-colors">Porównaj</span>
                 </Link>
 
                 <Link

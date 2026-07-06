@@ -51,7 +51,7 @@ export default function ProductCard({
   const [wishlist, setWishlist] = useState(initialWishlist);
   const [wishlistAnim, setWishlistAnim] = useState(false);
   const [quickAddAnim, setQuickAddAnim] = useState(false);
-  const { addItem, isInCart } = useCart();
+  const { addItem, isInCart, openCart } = useCart();
   const { showToast } = useToast();
 
   const itemId = propId ?? title.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -88,6 +88,7 @@ export default function ProductCard({
       image,
     });
     showToast(`${title} — dodano do koszyka!`, "success");
+    openCart();
   };
 
   const formatPrice = (val: number) =>
